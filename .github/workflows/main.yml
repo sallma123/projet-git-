@@ -1,0 +1,33 @@
+name: Deploy to Google Cloud VM
+
+on:
+  push:
+    branches:
+      - master  # ou la branche sur laquelle vous travaillez
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Vérifier le code source
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Installer Google Cloud SDK
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v0.5.0
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+      # Authentification Google Cloud
+      - name: Authenticate to Google Cloud
+        run: gcloud auth activate-service-account --key-file=${{ secrets.GCP_CREDENTIALS }}
+
+      # Se connecter à la VM
+      - name: SSH into Google Cloud VM and Build Docker Image
+        run: |
+          gcloud compute ssh --zone "us-central1-a" "your-vm-name" --command "
+            cd /path/to/your/project && \
+            docker build -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/your-image-name ."
